@@ -32,8 +32,8 @@ class TestMergeBasic(unittest.TestCase):
 
 
 class TestMergeByType(unittest.TestCase):
-    mock_scalar_1 = "test"
-    mock_scalar_2 = "test2"
+    mock_scalar_1 = "test: 1"
+    mock_scalar_2 = "test: 2"
     mock_dict_1 = """
     test:
       foo: 1
@@ -58,44 +58,57 @@ class TestMergeByType(unittest.TestCase):
         out = yaml_tools.merge_yaml([self.mock_scalar_1, self.mock_scalar_2])
         yaml = MyYAML()
         out_str = yaml.dump(out)
-        expected_out_str = "test2\n"  # the merge (the dump) add a '\n' at the end
+        expected_out_str = "test: 2\n"  # the merge (the dump) add a '\n' at the end
         self.assertEqual(out_str, expected_out_str)
 
     def test_merge_scalar_to_dict(self):
         import yaml_tools
-        dest = """
-        test:
-          foo: 1
-          bar: 2
-        """
-        source = "test"
-        self.assertRaises(TypeError, yaml_tools.merge_yaml, [dest, source])
+        self.assertRaises(TypeError, yaml_tools.merge_yaml, [self.mock_dict_1, self.mock_scalar_2])
 
     def test_merge_scalar_to_list(self):
         import yaml_tools
-        dest = "test:\n  - item1\n  - item2"
-        source = "test: scalar"
-        out = yaml_tools.merge_yaml([dest, source])
+        out = yaml_tools.merge_yaml([self.mock_list_1, self.mock_scalar_2])
         yaml = MyYAML()
         out_str = yaml.dump(out)
-        expected_out_str = "test:\n- item1\n- item2\n- scalar\n"  # the merge deletes indent before list items
+        expected_out_str = "test:\n- item1\n- item2\n- 2\n"  # the merge deletes indent before list items..
         self.assertEqual(out_str, expected_out_str)
 
     def test_merge_dict_to_scalar(self):
         import yaml_tools
-        source = "test: 1"
-        dest = "test"
-        self.assertRaises(TypeError, yaml_tools.merge_yaml, [dest, source])
+        self.assertRaises(TypeError, yaml_tools.merge_yaml, [self.mock_scalar_1, self.mock_dict_2])
+
+    def test_merge_dict_to_dict(self):
+        import yaml_tools
+        out = yaml_tools.merge_yaml([self.mock_dict_1, self.mock_dict_2])
+        yaml = MyYAML()
+        out_str = yaml.dump(out)
+        expected_out_str = "test:\n  foo: 1\n  bar: 2\n  foobar: babar\n"
+        self.assertEqual(out_str, expected_out_str)
 
     def test_merge_dict_to_list(self):
         import yaml_tools
-        dest = "test:\n  - item1\n  - item2"
-        source = """
-        test:
-          foo: 1
-          bar: 2
-        """
-        self.assertRaises(TypeError, yaml_tools.merge_yaml, [dest, source])
+        self.assertRaises(TypeError, yaml_tools.merge_yaml, [self.mock_list_1, self.mock_dict_2])
+
+    def test_merge_list_to_scalar(self):
+        import yaml_tools
+        out = yaml_tools.merge_yaml([self.mock_scalar_1, self.mock_list_2])
+        yaml = MyYAML()
+        out_str = yaml.dump(out)
+        expected_out_str = "test:\n- item3\n- 1\n"  # the scalar is appended at the end of the list
+        self.assertEqual(out_str, expected_out_str)
+
+    def test_merge_list_to_dict(self):
+        import yaml_tools
+        self.assertRaises(TypeError, yaml_tools.merge_yaml, [self.mock_dict_1, self.mock_list_2])
+
+    def test_merge_list_to_list(self):
+        import yaml_tools
+        out = yaml_tools.merge_yaml([self.mock_list_1, self.mock_list_2])
+        yaml = MyYAML()
+        out_str = yaml.dump(out)
+        expected_out_str = "test:\n- item1\n- item2\n- item3\n"
+        self.assertEqual(out_str, expected_out_str)
+
 
 if __name__ == '__main__':
     unittest.main()
