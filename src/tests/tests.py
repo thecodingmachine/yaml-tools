@@ -1,9 +1,11 @@
 import unittest
+import ruamel.yaml
 from ruamel.yaml import YAML
 from ruamel.yaml.compat import StringIO
-import sys
 
+import sys
 sys.path.append('..')
+import yaml_tools
 
 
 class MyYAML(YAML):
@@ -18,17 +20,33 @@ class MyYAML(YAML):
             return stream.getvalue()
 
 
-class TestMergeBasic(unittest.TestCase):
-    def test_basic_with_comment(self):
-        import yaml_tools
-        dest = "#comment 1\ntest: 1"
-        source = "test: 2"
-        source2 = "test: 3 #comment 3"
-        out = yaml_tools.merge_yaml([dest, source, source2])
-        yaml = MyYAML()
-        out_str = yaml.dump(out)
-        expected_out_str = "#comment 1\ntest: 3 #comment 3\n"
-        self.assertEqual(out_str, expected_out_str)
+class TestMerge(unittest.TestCase):
+    def test_triple_merge_with_comment(self):
+        file_1 = """
+        #comment1
+        test:
+          foo: 1
+          bar: 1
+        """
+        file_2 = """
+        test:
+          foo: 2 #comment2
+        """
+        file_3 = """
+        test:
+          bar: 3 #comment3
+        """
+        out = yaml_tools.merge_yaml([file_1, file_2, file_3])
+
+        expected_out_str = """
+        #comment1
+        test:
+          foo: 2 #comment2
+          bar: 3 #comment3
+        """
+        expected_out = ruamel.yaml.round_trip_load(expected_out_str)
+
+        self.assertEqual(out, expected_out)
 
 
 class TestMergeByType(unittest.TestCase):
@@ -54,7 +72,6 @@ class TestMergeByType(unittest.TestCase):
     """
 
     def test_merge_scalar_to_scalar(self):
-        import yaml_tools
         out = yaml_tools.merge_yaml([self.mock_scalar_1, self.mock_scalar_2])
         yaml = MyYAML()
         out_str = yaml.dump(out)
@@ -62,11 +79,9 @@ class TestMergeByType(unittest.TestCase):
         self.assertEqual(out_str, expected_out_str)
 
     def test_merge_scalar_to_dict(self):
-        import yaml_tools
         self.assertRaises(TypeError, yaml_tools.merge_yaml, [self.mock_dict_1, self.mock_scalar_2])
 
     def test_merge_scalar_to_list(self):
-        import yaml_tools
         out = yaml_tools.merge_yaml([self.mock_list_1, self.mock_scalar_2])
         yaml = MyYAML()
         out_str = yaml.dump(out)
@@ -74,11 +89,9 @@ class TestMergeByType(unittest.TestCase):
         self.assertEqual(out_str, expected_out_str)
 
     def test_merge_dict_to_scalar(self):
-        import yaml_tools
         self.assertRaises(TypeError, yaml_tools.merge_yaml, [self.mock_scalar_1, self.mock_dict_2])
 
     def test_merge_dict_to_dict(self):
-        import yaml_tools
         out = yaml_tools.merge_yaml([self.mock_dict_1, self.mock_dict_2])
         yaml = MyYAML()
         out_str = yaml.dump(out)
@@ -86,11 +99,9 @@ class TestMergeByType(unittest.TestCase):
         self.assertEqual(out_str, expected_out_str)
 
     def test_merge_dict_to_list(self):
-        import yaml_tools
         self.assertRaises(TypeError, yaml_tools.merge_yaml, [self.mock_list_1, self.mock_dict_2])
 
     def test_merge_list_to_scalar(self):
-        import yaml_tools
         out = yaml_tools.merge_yaml([self.mock_scalar_1, self.mock_list_2])
         yaml = MyYAML()
         out_str = yaml.dump(out)
@@ -98,11 +109,9 @@ class TestMergeByType(unittest.TestCase):
         self.assertEqual(out_str, expected_out_str)
 
     def test_merge_list_to_dict(self):
-        import yaml_tools
         self.assertRaises(TypeError, yaml_tools.merge_yaml, [self.mock_dict_1, self.mock_list_2])
 
     def test_merge_list_to_list(self):
-        import yaml_tools
         out = yaml_tools.merge_yaml([self.mock_list_1, self.mock_list_2])
         yaml = MyYAML()
         out_str = yaml.dump(out)
