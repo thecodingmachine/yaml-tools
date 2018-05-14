@@ -11,24 +11,26 @@ class TestMerge(unittest.TestCase):
         file_1 = """
         #comment1
         test:
-          foo: 1
+          foo: 1 #comment1
           bar: 1
         """
         file_2 = """
         test:
-          foo: 2 #comment2
+          foo: 2
         """
         file_3 = """
         test:
           bar: 3 #comment3
+          foobar: 3 #comment3
         """
         out = yaml_tools.merge_yaml([file_1, file_2, file_3])
-
+        # comment1 has been deleted (overwritten)
         expected_out_str = """
         #comment1
         test:
-          foo: 2 #comment2
+          foo: 2
           bar: 3 #comment3
+          foobar: 3 #comment3
         """
         expected_out = ruamel.yaml.round_trip_load(expected_out_str)
 
