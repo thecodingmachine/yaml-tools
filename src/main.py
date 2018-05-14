@@ -2,45 +2,64 @@ import argparse
 import ruamel.yaml
 
 
-def update(d, n):  # data, new_data
-    print("???")
-    if isinstance(n, ruamel.yaml.comments.CommentedMap):
-        for k in n:
-            d[k] = update(d[k], n[k]) if k in d else n[k]
-            if k in n.ca._items and n.ca._items[k][2] and \
-                    n.ca._items[k][2].value.strip():
-                d.ca._items[k] = n.ca._items[k]  # copy non-empty comment
+def get_type_error(dest, src):
+    return TypeError("Error trying to merge a {0} in a {1}".format(type(src), type(dest)))
+
+
+def update(dest, src):
+    if isinstance(src, ruamel.yaml.comments.CommentedMap):
+        if isinstance(dest, ruamel.yaml.comments.CommentedMap):
+            for k in src:
+                dest[k] = update(dest[k], src[k]) if k in dest else src[k]
+                if k in src.ca._items and src.ca._items[k][2] and \
+                        src.ca._items[k][2].value.strip():
+                    dest.ca._items[k] = src.ca._items[k]  # copy non-empty comment
+        else:
+            raise get_type_error(dest, src)
+    elif isinstance(src, ruamel.yaml.comments.CommentedSeq):
+        if isinstance(dest, ruamel.yaml.comments.CommentedMap):
+            raise get_type_error(dest, src)
+        elif isinstance(dest, ruamel.yaml.comments.CommentedSeq):
+            dest.extend(src)
+        else:
+            src.append(dest)
+            dest = src
     else:
-        d = n
-    return d
+        if isinstance(dest, ruamel.yaml.comments.CommentedMap):
+            raise get_type_error(dest, src)
+        elif isinstance(dest, ruamel.yaml.comments.CommentedSeq):
+            dest.append(src)
+        else:
+            dest = src
+    return dest
 
 
-def move_comment(d, depth=0, indent=2):
+def move_comment(dest, depth=0, indent=2):
     # recursively adjust comment
-    if isinstance(d, ruamel.yaml.comments.CommentedMap):
-        for k in d:
-            if isinstance(d[k], ruamel.yaml.comments.CommentedMap):
-                if hasattr(d, 'ca'):
-                    comment = d.ca.items.get(k)
+    if isinstance(dest, ruamel.yaml.comments.CommentedMap):
+        for k in dest:
+            if isinstance(dest[k], ruamel.yaml.comments.CommentedMap):
+                if hasattr(dest, 'ca'):
+                    comment = dest.ca.items.get(k)
                     if comment and comment[3] is not None:
                         # add to first key of the mapping that is the value
-                        for k1 in d[k]:
-                            d[k].yaml_set_comment_before_after_key(
+                        for k1 in dest[k]:
+                            dest[k].yaml_set_comment_before_after_key(
                                 k1,
                                 before=comment[3][0].value.lstrip('#').strip(),
                                 indent=indent * (depth + 1))
                             break
-            move_comment(d[k], depth + 1)
-    return d
+            move_comment(dest[k], depth + 1)
+    return dest
 
 
 def main(args):
     data_list = []
     for f in args.inputs:
-        file = open(f, "r")
-        data = ruamel.yaml.round_trip_load(file)
+        file_content = open(f, "r").read()
+        data = ruamel.yaml.round_trip_load(file_content)
         data_list.append(data)
-    for i in range(-1, -len(data_list) + 1, -1):
+    for i in range(-1, -len(data_list), -1):
         update(data_list[i - 1], move_comment(data_list[i]))
 
     output_file = open(args.output, "w")
