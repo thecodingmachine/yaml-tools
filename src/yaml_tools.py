@@ -53,17 +53,13 @@ def move_comment(dest, depth=0, indent=2):
     return dest
 
 
-def main(args):
-    data_list = []
-    for f in args.inputs:
-        file_content = open(f, "r").read()
-        data = ruamel.yaml.round_trip_load(file_content)
-        data_list.append(data)
-    for i in range(-1, -len(data_list), -1):
-        update(data_list[i - 1], move_comment(data_list[i]))
-
-    output_file = open(args.output, "w")
-    ruamel.yaml.round_trip_dump(data_list[0], output_file, indent=args.indent)
+def merge_yaml(contents):
+    data = []
+    for i in contents:
+        data.append(ruamel.yaml.round_trip_load(i))
+    for i in range(-1, -len(contents), -1):
+        update(data[i - 1], move_comment(data[i]))
+    return data[0]
 
 
 if __name__ == '__main__':
@@ -73,5 +69,13 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--output", type=str, help="Path to the output file", default="./output.yaml")
     parser.add_argument("--indent", type=int, help="Number of space(s) for each indent", default=2)
 
-    arguments = parser.parse_args()
-    main(arguments)
+    args = parser.parse_args()
+
+    file_contents = []
+    for f in args.inputs:
+        file_content = open(f, "r").read()
+        file_contents.append(file_content)
+    print()
+    out_content = merge_yaml(file_contents)
+    output_file = open(args.output, "w")
+    ruamel.yaml.round_trip_dump(out_content, output_file, indent=args.indent)
