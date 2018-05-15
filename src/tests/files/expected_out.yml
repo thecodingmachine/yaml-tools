@@ -1,0 +1,5 @@
+#comment1
+test:
+  foo: 2 #comment1
+  bar: 3 #comment3
+  foobar: 3 #comment3

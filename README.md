@@ -3,7 +3,7 @@
 
 # Yaml-tools
 
-A set of CLI tools to manipulate YAML files (merge, edit, etc...) with comment preservation 
+A set of CLI tools to manipulate YAML files (merge, delete, etc...) with comment preservation 
 
 ## Getting Started
 
@@ -19,7 +19,14 @@ A set of CLI tools to manipulate YAML files (merge, edit, etc...) with comment p
 
 ## Usage
 ```
-$ python yaml_tools.py [-h] -i INPUTS [INPUTS ...] [-o OUTPUT] [--indent INDENT]
+$ python yaml_tools.py <command> [<args>] 
+```
+At the moment there is only one command available :
+
+#### merge
+Merge two or more yaml files and preserve the comments
+```
+$ python yaml_tools.py merge -i INPUTS [INPUTS ...] [-o OUTPUT] [--indent INDENT]
 ```
 - INPUTS: paths to input yaml files, which will be merged from the last to the first.
 - OUTPUT: path to output yaml file (or sys.stdout by default).
@@ -27,7 +34,7 @@ $ python yaml_tools.py [-h] -i INPUTS [INPUTS ...] [-o OUTPUT] [--indent INDENT]
 
 ## Running the tests
 ```
-$ cd tests
+$ cd src/tests/
 $ python -m unittest discover
 ```
 ##
