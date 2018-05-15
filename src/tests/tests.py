@@ -2,6 +2,7 @@ import unittest
 import ruamel.yaml
 
 import sys
+
 sys.path.append('..')
 import yaml_tools
 
@@ -120,5 +121,5 @@ class TestMergeByType(unittest.TestCase):
         self.assertEqual(out, expected_out)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()
