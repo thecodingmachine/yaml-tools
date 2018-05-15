@@ -1,0 +1,4 @@
+#comment1
+test:
+  foo: 1 #comment1
+  bar: 1
