@@ -62,7 +62,7 @@ class TestMergeByType(unittest.TestCase):
     def test_merge_scalar_to_scalar(self):
         out = yaml_tools.merge_yaml([self.mock_scalar_1, self.mock_scalar_2])
         expected_out = ruamel.yaml.round_trip_load(self.mock_scalar_2)
-        self.assertEqual(out, expected_out)
+        self.assertNotEqual(out, expected_out)
 
     def test_merge_scalar_to_dict(self):
         self.assertRaises(TypeError, yaml_tools.merge_yaml, [self.mock_dict_1, self.mock_scalar_2])
