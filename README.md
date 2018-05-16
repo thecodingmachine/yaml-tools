@@ -3,7 +3,7 @@
 
 # Yaml-tools
 
-A set of CLI tools to manipulate YAML files (merge, delete, etc...) with comment preservation 
+A set of CLI tools to manipulate YAML files (merge, delete, etc...) with comment preservation, based on [ruamel.yaml](http://yaml.readthedocs.io/en/latest/) 
 
 ## Getting Started
 
@@ -21,14 +21,25 @@ A set of CLI tools to manipulate YAML files (merge, delete, etc...) with comment
 ```
 $ python yaml_tools.py <command> [<args>] 
 ```
-At the moment there is only one command available :
 
-#### merge
+There are only 2 commands at the moments :
+
+### merge
 Merge two or more yaml files and preserve the comments
 ```
 $ python yaml_tools.py merge -i INPUTS [INPUTS ...] [-o OUTPUT] [--indent INDENT]
 ```
 - INPUTS: paths to input yaml files, which will be merged from the last to the first.
+- OUTPUT: path to output yaml file (or sys.stdout by default).
+- INDENT: number of space(s) for each indent.
+
+### delete
+Delete one item from the input yaml file
+```
+$ python yaml_tools.py delete ITEM_PATH -i INPUT [-o OUTPUT] [--indent INDENT]
+```
+- ITEM_PATH: yaml item to be deleted, e.g. `key1.list[0].key2`
+- INPUT: path to input yaml file.
 - OUTPUT: path to output yaml file (or sys.stdout by default).
 - INDENT: number of space(s) for each indent.
 
