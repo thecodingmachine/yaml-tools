@@ -1,31 +1,62 @@
 import unittest
 import ruamel.yaml
+from ruamel.yaml import YAML
+from ruamel.yaml.compat import StringIO
 
 import sys
 sys.path.append('..')
 import yaml_tools
 
 
-def _pass(s):
-    pass
+class MyYAML(YAML):
+    def dump(self, data, stream=None, **kw):
+        inefficient = False
+        if stream is None:
+            inefficient = True
+            stream = StringIO()
+        YAML.dump(self, data, stream, **kw)
+        if inefficient:
+            return stream.getvalue()
 
 
 class TestCommands(unittest.TestCase):
-    def test_unrecognized_command(self):
-        sys.argv = ['yaml-tools', 'super-unrecognized-command-wtf']
-        with self.assertRaises(SystemExit) as cm:
-            yaml_tools.main()
-        self.assertEqual(cm.exception.code, 1)
-
-
-class TestMerge(unittest.TestCase):
-    str_out = """
+    merge_str_out = """
         #comment1
         test:
           foo: 2 #comment1
           bar: 3 #comment3
           foobar: 3 #comment3
         """
+
+    def test_unrecognized_command(self):
+        sys.argv = ['yaml-tools', 'super-unrecognized-command-wtf']
+        with self.assertRaises(SystemExit) as cm:
+            yaml_tools.main()
+        self.assertEqual(cm.exception.code, 1)
+
+    def test_fail_delete_command(self):
+        fi = './delete/file.yml'
+
+        sys.argv = ['yaml-tools', 'delete', 'unknownKey0', '-i', fi]
+        self.assertRaises(KeyError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'unknownKey1.foo', '-i', fi]
+        self.assertRaises(KeyError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test.foo[0].check', '-i', fi]
+        self.assertRaises(TypeError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[10].check', '-i', fi]
+        self.assertRaises(IndexError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[1000]', '-i', fi]
+        self.assertRaises(IndexError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test.foo.unknownKey2[0]', '-i', fi]
+        self.assertRaises(KeyError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[2].unknownKey3', '-i', fi]
+        self.assertRaises(TypeError, yaml_tools.main)
 
     def test_3_str_merge_with_comment(self):
         str1 = """
@@ -43,33 +74,46 @@ class TestMerge(unittest.TestCase):
           bar: 3 #comment3
           foobar: 3 #comment3
         """
+
         out = yaml_tools.successive_merge([str1, str2, str3])
-        expected_out = ruamel.yaml.round_trip_load(self.str_out)
+        expected_out = ruamel.yaml.round_trip_load(self.merge_str_out)
 
-        yml = ruamel.yaml.YAML()
-        out_str = yml.dump(out, None, transform=_pass)
-        expected_out_str = yml.dump(expected_out, None, transform=_pass)
-
+        yml = MyYAML()
+        out_str = yml.dump(out)
+        expected_out_str = yml.dump(expected_out)
         self.assertEqual(out_str, expected_out_str)
 
     def test_3_files_merge_with_comment(self):
-        f1 = './files/file1.yml'
-        f2 = './files/file2.yml'
-        f3 = './files/file3.yml'
-        fo = './files/out.yml'
-        sys.argv = ['yaml-tools', 'merge', '-i', f1, f2, f3, '-o', fo]
+        f1 = './merge/file1.yml'
+        f2 = './merge/file2.yml'
+        f3 = './merge/file3.yml'
+        fo = './merge/out.yml'
+        feo = './merge/expected_out.yml'
 
+        sys.argv = ['yaml-tools', 'merge', '-i', f1, f2, f3, '-o', fo]
         yaml_tools.main()
 
-        yml = ruamel.yaml.YAML()
         out_file = open(fo, 'r')
-        out_str = yml.dump(out_file.read(), None, transform=_pass)
+        expected_out_file = open(feo, 'r')
+        self.assertEqual(out_file.read(), expected_out_file.read())
         out_file.close()
+        expected_out_file.close()
 
-        expected_out = ruamel.yaml.round_trip_load(self.str_out)
-        expected_out_str = yml.dump(expected_out, None, transform=_pass)
+    def test_delete_item(self):
+        fi = './delete/file.yml'
+        fo = './delete/out.yml'
+        feo = './delete/expected_out.yml'
 
-        self.assertEqual(out_str, expected_out_str)
+        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[2]', '-i', fi, '-o', fo]
+        yaml_tools.main()
+        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[1].check', '-i', fo, '-o', fo]
+        yaml_tools.main()
+
+        out_file = open(fo, 'r')
+        expected_out_file = open(feo, 'r')
+        self.assertEqual(out_file.read(), expected_out_file.read())
+        out_file.close()
+        expected_out_file.close()
 
 
 class TestMergeByType(unittest.TestCase):

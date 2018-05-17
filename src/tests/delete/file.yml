@@ -1,0 +1,11 @@
+#comment1
+test:
+  foo:
+    h:
+      - check: ok
+        ef: fefe
+      - check: not_ok
+        ef: fefsegsegs
+      - fqffqzfq
+    i: random
+  bar: 1
