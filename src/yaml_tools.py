@@ -87,9 +87,6 @@ def get_dict_item(dic, item):
 
     else:  # simple dict get
         got_item = dic[item]
-
-    if got_item is None:
-        raise KeyError("'{}' key not found".format(item))
     return got_item
 
 

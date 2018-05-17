@@ -40,16 +40,22 @@ class TestCommands(unittest.TestCase):
         sys.argv = ['yaml-tools', 'delete', 'unknownKey0', '-i', fi]
         self.assertRaises(KeyError, yaml_tools.main)
 
-        sys.argv = ['yaml-tools', 'delete', 'test.foo[0]', '-i', fi]
+        sys.argv = ['yaml-tools', 'delete', 'unknownKey1.foo', '-i', fi]
         self.assertRaises(KeyError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test.foo[0].check', '-i', fi]
+        self.assertRaises(TypeError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[10].check', '-i', fi]
+        self.assertRaises(IndexError, yaml_tools.main)
 
         sys.argv = ['yaml-tools', 'delete', 'test.foo.h[1000]', '-i', fi]
         self.assertRaises(IndexError, yaml_tools.main)
 
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.unknownKey1[0]', '-i', fi]
+        sys.argv = ['yaml-tools', 'delete', 'test.foo.unknownKey2[0]', '-i', fi]
         self.assertRaises(KeyError, yaml_tools.main)
 
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[2].unknownKey2', '-i', fi]
+        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[2].unknownKey3', '-i', fi]
         self.assertRaises(TypeError, yaml_tools.main)
 
     def test_3_str_merge_with_comment(self):
