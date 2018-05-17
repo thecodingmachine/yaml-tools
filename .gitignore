@@ -1,5 +1,8 @@
 /venv/
 /.idea
+/.vscode/
+
 yaml-tools.iml
+
 *.pyc
 .coverage
