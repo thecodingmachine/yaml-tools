@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import argparse
 import ruamel.yaml
@@ -61,7 +63,7 @@ def has_valid_brackets(s):
     :param s: e.g. my_list[0]
     :return: (True, key, index) or (None, None, None)
     """
-    list_regex = re.compile("\A\w+\[{1}\d+\]{1}\Z")
+    list_regex = re.compile(r"\A\w+\[{1}\d+\]{1}\Z")
     if list_regex.match(s) is not None:
         key = s[:int(s.find('['))]
         index = int(s[s.find('[') + 1: len(s) - 1])
@@ -128,10 +130,10 @@ def delete():
     is_array, key, index = has_valid_brackets(item_to_delete)
     try:
         if is_array:
-            tmp = item_parent[key][index]  # to trigger a KeyError if not found
+            item_parent[key][index]  # to trigger a KeyError if not found
             del item_parent[key][index]
         else:
-            tmp = item_parent[item_to_delete]
+            item_parent[item_to_delete]
             del item_parent[item_to_delete]
     except (AttributeError, KeyError, IndexError, TypeError):
         print("An error occurred when deleting '{}' :".format(item_to_delete))
