@@ -14,7 +14,7 @@ A set of CLI tools to manipulate YAML files (merge, delete, etc...) with comment
 (For development see section at the end)
 ```
 $ pip install ruamel.yaml
-$ export YAML_TOOLS_VERSION=0.1
+$ export YAML_TOOLS_VERSION=0.1.0
 $ sudo wget https://raw.githubusercontent.com/thecodingmachine/yaml-tools/${YAML_TOOLS_VERSION}/src/yaml_tools.py -O /usr/local/bin/yaml-tools
 $ sudo chmod +x /usr/bin/yaml-tools
 ```
