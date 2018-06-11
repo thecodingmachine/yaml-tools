@@ -23,6 +23,8 @@ def _merge(dest, src, current_path=""):
                 if k in src.ca._items and src.ca._items[k][2] and \
                         src.ca._items[k][2].value.strip():
                     dest.ca._items[k] = src.ca._items[k]  # copy non-empty comment
+        elif dest is None:
+            dest = src
         else:
             raise get_type_error(dest, src, current_path)
     elif isinstance(src, ruamel.yaml.comments.CommentedSeq):
@@ -30,9 +32,13 @@ def _merge(dest, src, current_path=""):
             raise get_type_error(dest, src, current_path)
         elif isinstance(dest, ruamel.yaml.comments.CommentedSeq):
             dest.extend(src)
+        elif dest is None:
+            dest=src
         else:
             src.append(dest)
             dest = src
+    elif src is None:
+        return dest
     else:
         if isinstance(dest, ruamel.yaml.comments.CommentedMap):
             raise get_type_error(dest, src, current_path)
