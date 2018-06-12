@@ -24,7 +24,7 @@ def _merge(dest, src, current_path=""):
                         src.ca._items[k][2].value.strip():
                     dest.ca._items[k] = src.ca._items[k]  # copy non-empty comment
         elif dest is None:
-            dest = src
+            return src
         else:
             raise get_type_error(dest, src, current_path)
     elif isinstance(src, ruamel.yaml.comments.CommentedSeq):
@@ -33,7 +33,7 @@ def _merge(dest, src, current_path=""):
         elif isinstance(dest, ruamel.yaml.comments.CommentedSeq):
             dest.extend(src)
         elif dest is None:
-            dest=src
+            return src
         else:
             src.append(dest)
             dest = src
@@ -59,8 +59,8 @@ def successive_merge(contents):
     for i in contents:
         data.append(ruamel.yaml.round_trip_load(i))
     for i in range(-1, -len(contents), -1):
-        _merge(data[i - 1], data[i], 'ROOT')
-    return data[0]
+        final_data = _merge(data[i - 1], data[i], 'ROOT')
+    return final_data
 
 
 def has_valid_brackets(s):

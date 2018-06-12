@@ -137,7 +137,7 @@ class TestMergeByType(unittest.TestCase):
     test:
       - item3
     """
-    mock_None = 'test: '
+    mock_None = ''
 
     # from scalar to any 
 
@@ -216,7 +216,7 @@ class TestMergeByType(unittest.TestCase):
         self.assertEqual(out, expected_out)
 
     def test_merge_list_to_None(self):
-        out = yaml_tools.successive_merge([self.mock_None, self.mock_list_2])
+        out = yaml_tools.successive_merge(['test: ', self.mock_list_2])
         expected_out = ruamel.yaml.round_trip_load(self.mock_list_2)
         self.assertEqual(out, expected_out)
 
