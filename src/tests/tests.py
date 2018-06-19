@@ -52,10 +52,12 @@ class TestCommands(unittest.TestCase):
         sys.argv = ['yaml-tools', 'delete', 'test.foo.h[1000]', '-i', fi]
         self.assertRaises(IndexError, yaml_tools.main)
 
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.unknownKey2[0]', '-i', fi]
+        sys.argv = ['yaml-tools', 'delete',
+                    'test.foo.unknownKey2[0]', '-i', fi]
         self.assertRaises(KeyError, yaml_tools.main)
 
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[2].unknownKey3', '-i', fi]
+        sys.argv = ['yaml-tools', 'delete',
+                    'test.foo.h[2].unknownKey3', '-i', fi]
         self.assertRaises(TypeError, yaml_tools.main)
 
     def test_3_str_merge_with_comment(self):
@@ -104,9 +106,11 @@ class TestCommands(unittest.TestCase):
         fo = './delete/out.yml'
         feo = './delete/expected_out.yml'
 
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[2]', '-i', fi, '-o', fo]
+        sys.argv = ['yaml-tools', 'delete',
+                    'test.foo.h[2]', '-i', fi, '-o', fo]
         yaml_tools.main()
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[1].check', '-i', fo, '-o', fo]
+        sys.argv = ['yaml-tools', 'delete',
+                    'test.foo.h[1].check', '-i', fo, '-o', fo]
         yaml_tools.main()
 
         out_file = open(fo, 'r')
@@ -139,18 +143,21 @@ class TestMergeByType(unittest.TestCase):
     """
     mock_None = ''
 
-    # from scalar to any 
+    # from scalar to any
 
     def test_merge_scalar_to_scalar(self):
-        out = yaml_tools.successive_merge([self.mock_scalar_1, self.mock_scalar_2])
+        out = yaml_tools.successive_merge(
+            [self.mock_scalar_1, self.mock_scalar_2])
         expected_out = ruamel.yaml.round_trip_load(self.mock_scalar_2)
         self.assertEqual(out, expected_out)
 
     def test_merge_scalar_to_dict(self):
-        self.assertRaises(TypeError, yaml_tools.successive_merge, [self.mock_dict_1, self.mock_scalar_2])
+        self.assertRaises(TypeError, yaml_tools.successive_merge, [
+                          self.mock_dict_1, self.mock_scalar_2])
 
     def test_merge_scalar_to_list(self):
-        out = yaml_tools.successive_merge([self.mock_list_1, self.mock_scalar_2])
+        out = yaml_tools.successive_merge(
+            [self.mock_list_1, self.mock_scalar_2])
         expected_out_str = """
         test:
           - item1
@@ -159,7 +166,7 @@ class TestMergeByType(unittest.TestCase):
         """
         expected_out = ruamel.yaml.round_trip_load(expected_out_str)
         self.assertEqual(out, expected_out)
-    
+
     def test_merge_scalar_to_None(self):
         out = yaml_tools.successive_merge([self.mock_None, self.mock_scalar_2])
         expected_out = ruamel.yaml.round_trip_load(self.mock_scalar_2)
@@ -168,7 +175,8 @@ class TestMergeByType(unittest.TestCase):
     # from dict to any
 
     def test_merge_dict_to_scalar(self):
-        self.assertRaises(TypeError, yaml_tools.successive_merge, [self.mock_scalar_1, self.mock_dict_2])
+        self.assertRaises(TypeError, yaml_tools.successive_merge, [
+                          self.mock_scalar_1, self.mock_dict_2])
 
     def test_merge_dict_to_dict(self):
         out = yaml_tools.successive_merge([self.mock_dict_1, self.mock_dict_2])
@@ -182,17 +190,19 @@ class TestMergeByType(unittest.TestCase):
         self.assertEqual(out, expected_out)
 
     def test_merge_dict_to_list(self):
-        self.assertRaises(TypeError, yaml_tools.successive_merge, [self.mock_list_1, self.mock_dict_2])
-    
+        self.assertRaises(TypeError, yaml_tools.successive_merge, [
+                          self.mock_list_1, self.mock_dict_2])
+
     def test_merge_dict_to_None(self):
         out = yaml_tools.successive_merge([self.mock_None, self.mock_dict_2])
         expected_out = ruamel.yaml.round_trip_load(self.mock_dict_2)
         self.assertEqual(out, expected_out)
 
-    ##  from list to any
+    # from list to any
 
     def test_merge_list_to_scalar(self):
-        out = yaml_tools.successive_merge([self.mock_scalar_1, self.mock_list_2])
+        out = yaml_tools.successive_merge(
+            [self.mock_scalar_1, self.mock_list_2])
         expected_out_str = """
         test:
         - item3
@@ -202,7 +212,8 @@ class TestMergeByType(unittest.TestCase):
         self.assertEqual(out, expected_out)
 
     def test_merge_list_to_dict(self):
-        self.assertRaises(TypeError, yaml_tools.successive_merge, [self.mock_dict_1, self.mock_list_2])
+        self.assertRaises(TypeError, yaml_tools.successive_merge, [
+                          self.mock_dict_1, self.mock_list_2])
 
     def test_merge_list_to_list(self):
         out = yaml_tools.successive_merge([self.mock_list_1, self.mock_list_2])
@@ -220,20 +231,24 @@ class TestMergeByType(unittest.TestCase):
         expected_out = ruamel.yaml.round_trip_load(self.mock_list_2)
         self.assertEqual(out, expected_out)
 
-    ##  from None to any
+    # from None to any
     def test_merge_None_to_any(self):
         out = yaml_tools.successive_merge([self.mock_None, self.mock_None])
         expected_out = ruamel.yaml.round_trip_load(self.mock_None)
-        self.assertEqual(out, expected_out, 'Merge None to None should succeed')
+        self.assertEqual(out, expected_out,
+                         'Merge None to None should succeed')
         out = yaml_tools.successive_merge([self.mock_scalar_1, self.mock_None])
         expected_out = ruamel.yaml.round_trip_load(self.mock_scalar_1)
-        self.assertEqual(out, expected_out, 'Merge None to scalar should succeed')
+        self.assertEqual(out, expected_out,
+                         'Merge None to scalar should succeed')
         out = yaml_tools.successive_merge([self.mock_dict_1, self.mock_None])
         expected_out = ruamel.yaml.round_trip_load(self.mock_dict_1)
-        self.assertEqual(out, expected_out, 'Merge None to dict should succeed')
+        self.assertEqual(out, expected_out,
+                         'Merge None to dict should succeed')
         out = yaml_tools.successive_merge([self.mock_list_1, self.mock_None])
         expected_out = ruamel.yaml.round_trip_load(self.mock_list_1)
-        self.assertEqual(out, expected_out, 'Merge None to list should succeed')
+        self.assertEqual(out, expected_out,
+                         'Merge None to list should succeed')
 
 
 if __name__ == '__main__':  # pragma: no cover
