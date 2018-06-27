@@ -1,4 +1,16 @@
-#comment1
 test:
-  foo: 1 #comment1
+  foo:
+    h: #ok
+      check: ook
+      ef: fefedfr
+      # new-comment
+      check2: not_ok_
+      ef2: fefsegsegsf
+      check3: not_oke
+      ef3: nopee
+    i:
+      toto: random
+  # comment-bar
   bar: 1
+  # end nope
+# end nope

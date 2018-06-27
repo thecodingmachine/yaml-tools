@@ -2,13 +2,14 @@
 test:
   foo:
     h:
-    # comment2
-    - check: ok   # comment3
-      ef: fefe
-    # comment4
-    - check: not_ok
-      ef: fefsegsegs # comment5
-    - fqffqzfq # comment-nope
+      # comment2
+      - check: ok # comment3
+        ef: fefe
+      # comment4
+      - check: not_ok
+        ef: fefsegsegs # comment5
+      - check: not_ok # comment-nope
+        ef: nope # comment-nope
     # comment6
     i: random
   bar: 1

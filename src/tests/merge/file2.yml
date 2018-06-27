@@ -1,2 +1,31 @@
+#comment1
 test:
-  foo: 2
+  foo:
+    h: #comment1.0
+      # comment2
+      check: ok   # comment3
+      ef: fefe
+      # comment4
+      check2: not_ok
+      ef2: fefsegsegs # comment5
+      check3: not_ok # comment-ok
+      ef3: nope # comment-ok
+    # comment6
+    # comment7
+    i: # comment8
+      toto: random
+  bar: 1
+  foo2:
+    h:
+    # comment2
+    - check: ok   # comment3
+      ef: fefe
+    # comment4
+    - check: not_ok
+      ef: fefsegsegs
+    - check: not_ok
+      ef: nope # comment-ok
+    i: random
+    # foo
+  # end
+# end 2

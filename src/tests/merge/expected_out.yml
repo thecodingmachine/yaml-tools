@@ -1,5 +1,39 @@
 #comment1
 test:
-  foo: 2 #comment1
+  foo:
+    h: #comment1.0
+      # comment2
+      check: ok   # comment3
+      ef: fefe
+      # new-comment
+      check2: not_ok
+      ef2: fefsegsegs # comment5
+      check3: not_ok # comment-ok
+      ef3: nope # comment-ok
+    # comment6
+    # comment7
+    i: # comment8
+      toto: random
   bar: 3 #comment3
+  foo2:
+    h:
+    # comment2
+    - check: ok   # comment3
+      ef: fefe
+    # comment4
+    - check: not_ok
+      ef: fefsegsegs
+    - check: not_ok
+      ef: nope # comment-ok
+    - check: okz   # comment3
+      ef: fefed
+    - check: not_okay
+      ef: fefsegdzasegs # comment5
+    - check: not_ok # comment-ok
+      ef: nope # comment-ok
+    # comment6
+    i: randomd
   foobar: 3 #comment3
+    # foo
+  # end
+# end 2

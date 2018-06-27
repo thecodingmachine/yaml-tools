@@ -1,3 +1,15 @@
 test:
   bar: 3 #comment3
   foobar: 3 #comment3
+  foo2:
+    h:
+    # comment2
+    - check: okz   # comment3
+      ef: fefed
+    # comment4
+    - check: not_okay
+      ef: fefsegdzasegs # comment5
+    - check: not_ok # comment-ok
+      ef: nope # comment-ok
+    # comment6
+    i: randomd
