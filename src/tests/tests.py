@@ -1,9 +1,10 @@
+import sys
 import unittest
-import ruamel.yaml
+
 from ruamel.yaml import YAML
+from ruamel.yaml import round_trip_load
 from ruamel.yaml.compat import StringIO
 
-import sys
 sys.path.append('..')
 import yaml_tools
 
@@ -23,9 +24,11 @@ class TestCommands(unittest.TestCase):
     merge_str_out = """
         #comment1
         test:
+          #ninja-comment2
           foo: 2 #comment1
           bar: 3 #comment3
           foobar: 3 #comment3
+          #ninja-comment3
         """
 
     def test_unrecognized_command(self):
@@ -40,43 +43,48 @@ class TestCommands(unittest.TestCase):
         sys.argv = ['yaml-tools', 'delete', 'unknownKey0', '-i', fi]
         self.assertRaises(KeyError, yaml_tools.main)
 
-        sys.argv = ['yaml-tools', 'delete', 'unknownKey1.foo', '-i', fi]
+        sys.argv = ['yaml-tools', 'delete', 'unknownKey1', 'foo', '-i', fi]
+        self.assertRaises(RuntimeError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test', 'foo', '0', 'check', '-i', fi]
+        self.assertRaises(RuntimeError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test', 'foo', 'h', '10' 'check', '-i', fi]
+        self.assertRaises(RuntimeError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete', 'test', 'foo', 'h', '1000', '-i', fi]
+        self.assertRaises(RuntimeError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete',
+                    'test', 'foo', 'unknownKey2', '0', '-i', fi]
+        self.assertRaises(RuntimeError, yaml_tools.main)
+
+        sys.argv = ['yaml-tools', 'delete',
+                    'test', 'foo', 'h', '2', 'unknownKey3', '-i', fi]
         self.assertRaises(KeyError, yaml_tools.main)
-
-        sys.argv = ['yaml-tools', 'delete', 'test.foo[0].check', '-i', fi]
-        self.assertRaises(TypeError, yaml_tools.main)
-
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[10].check', '-i', fi]
-        self.assertRaises(IndexError, yaml_tools.main)
-
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[1000]', '-i', fi]
-        self.assertRaises(IndexError, yaml_tools.main)
-
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.unknownKey2[0]', '-i', fi]
-        self.assertRaises(KeyError, yaml_tools.main)
-
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[2].unknownKey3', '-i', fi]
-        self.assertRaises(TypeError, yaml_tools.main)
 
     def test_3_str_merge_with_comment(self):
         str1 = """
         #comment1
         test:
           foo: 1 #comment1
+          #ninja-comment1
           bar: 1
         """
         str2 = """
         test:
+          #ninja-comment2
           foo: 2
         """
         str3 = """
         test:
           bar: 3 #comment3
           foobar: 3 #comment3
+          #ninja-comment3
         """
 
         out = yaml_tools.successive_merge([str1, str2, str3])
-        expected_out = ruamel.yaml.round_trip_load(self.merge_str_out)
+        expected_out = round_trip_load(self.merge_str_out)
 
         yml = MyYAML()
         out_str = yml.dump(out)
@@ -104,9 +112,16 @@ class TestCommands(unittest.TestCase):
         fo = './delete/out.yml'
         feo = './delete/expected_out.yml'
 
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[2]', '-i', fi, '-o', fo]
+        sys.argv = ['yaml-tools', 'delete',
+                    'test', 'foo', 'h', '2', 'check', '-i', fi, '-o', fo]
         yaml_tools.main()
-        sys.argv = ['yaml-tools', 'delete', 'test.foo.h[1].check', '-i', fo, '-o', fo]
+
+        sys.argv = ['yaml-tools', 'delete',
+                    'test', 'foo', 'h', '2', 'ef', '-i', fo, '-o', fo]
+        yaml_tools.main()
+
+        sys.argv = ['yaml-tools', 'delete',
+                    'test', 'foo', 'h', '1', 'check', '-i', fo, '-o', fo]
         yaml_tools.main()
 
         out_file = open(fo, 'r')
@@ -114,6 +129,90 @@ class TestCommands(unittest.TestCase):
         self.assertEqual(out_file.read(), expected_out_file.read())
         out_file.close()
         expected_out_file.close()
+
+
+class TestCommentCommand(unittest.TestCase):
+    def test_comment_commented_map_item(self):
+        str = """
+#comment1
+test:
+  #ninja-comment
+  foo:
+    sub-foo: 1
+  bar:
+    sub-bar: 2
+  baz:
+    sub-baz: 3
+            """
+        expected_str = """
+#comment1
+test:
+  #ninja-comment
+  foo:
+    sub-foo: 1
+  #bar:
+  #  sub-bar: 2
+  baz:
+    sub-baz: 3
+            """
+
+        data = round_trip_load(str, preserve_quotes=True)
+        path_to_key = ['test', 'bar']
+        out = yaml_tools.comment_yaml_item(data, path_to_key, False)
+        expected_out = round_trip_load(expected_str, preserve_quotes=True)
+
+        yml = MyYAML()
+        out_str = yml.dump(out)
+        expected_out_str = yml.dump(expected_out)
+        self.assertEqual(out_str, expected_out_str)
+
+    def test_comment_commented_seq_item(self):
+        str = """
+#comment1
+test:
+#ninja-comment
+- foo:
+  sub-foo: 1
+- bar:
+  sub-bar: 2
+- baz:
+  sub-baz: 3
+            """
+        expected_str = """
+#comment1
+test:
+#ninja-comment
+- foo:
+  sub-foo: 1
+#- bar:
+#  sub-bar: 2
+- baz:
+  sub-baz: 3
+            """
+
+        data = round_trip_load(str, preserve_quotes=True)
+        path_to_key = ['test', '1']
+        out = yaml_tools.comment_yaml_item(data, path_to_key, True)
+        expected_out = round_trip_load(expected_str, preserve_quotes=True)
+
+        yml = MyYAML()
+        out_str = yml.dump(out)
+        expected_out_str = yml.dump(expected_out)
+        self.assertEqual(out_str, expected_out_str)
+
+    def test_fail_comment_commented(self):
+        str = """
+test:
+  foo:
+    sub-foo: 1
+  bar:
+  - sub-bar: 1
+  - sub-bar: 2
+            """
+        data = round_trip_load(str, preserve_quotes=True)
+        self.assertRaises(KeyError, yaml_tools.comment_yaml_item, data, ['unknown-key'])
+        self.assertRaises(RuntimeError, yaml_tools.comment_yaml_item, data, ['test', 'bar', '1000'])
+        self.assertRaises(RuntimeError, yaml_tools.comment_yaml_item, data, ['test', 'bar', 'NotAnInteger'])
 
 
 class TestMergeByType(unittest.TestCase):
@@ -139,36 +238,40 @@ class TestMergeByType(unittest.TestCase):
     """
     mock_None = ''
 
-    # from scalar to any 
+    # from scalar to any
 
     def test_merge_scalar_to_scalar(self):
-        out = yaml_tools.successive_merge([self.mock_scalar_1, self.mock_scalar_2])
-        expected_out = ruamel.yaml.round_trip_load(self.mock_scalar_2)
+        out = yaml_tools.successive_merge(
+            [self.mock_scalar_1, self.mock_scalar_2])
+        expected_out = round_trip_load(self.mock_scalar_2)
         self.assertEqual(out, expected_out)
 
     def test_merge_scalar_to_dict(self):
-        self.assertRaises(TypeError, yaml_tools.successive_merge, [self.mock_dict_1, self.mock_scalar_2])
+        self.assertRaises(TypeError, yaml_tools.successive_merge, [
+            self.mock_dict_1, self.mock_scalar_2])
 
     def test_merge_scalar_to_list(self):
-        out = yaml_tools.successive_merge([self.mock_list_1, self.mock_scalar_2])
+        out = yaml_tools.successive_merge(
+            [self.mock_list_1, self.mock_scalar_2])
         expected_out_str = """
         test:
           - item1
           - item2
           - 2
         """
-        expected_out = ruamel.yaml.round_trip_load(expected_out_str)
+        expected_out = round_trip_load(expected_out_str)
         self.assertEqual(out, expected_out)
-    
+
     def test_merge_scalar_to_None(self):
         out = yaml_tools.successive_merge([self.mock_None, self.mock_scalar_2])
-        expected_out = ruamel.yaml.round_trip_load(self.mock_scalar_2)
+        expected_out = round_trip_load(self.mock_scalar_2)
         self.assertEqual(out, expected_out)
 
     # from dict to any
 
     def test_merge_dict_to_scalar(self):
-        self.assertRaises(TypeError, yaml_tools.successive_merge, [self.mock_scalar_1, self.mock_dict_2])
+        self.assertRaises(TypeError, yaml_tools.successive_merge, [
+            self.mock_scalar_1, self.mock_dict_2])
 
     def test_merge_dict_to_dict(self):
         out = yaml_tools.successive_merge([self.mock_dict_1, self.mock_dict_2])
@@ -178,31 +281,34 @@ class TestMergeByType(unittest.TestCase):
           bar: 2
           foobar: babar
         """
-        expected_out = ruamel.yaml.round_trip_load(expected_out_str)
+        expected_out = round_trip_load(expected_out_str)
         self.assertEqual(out, expected_out)
 
     def test_merge_dict_to_list(self):
-        self.assertRaises(TypeError, yaml_tools.successive_merge, [self.mock_list_1, self.mock_dict_2])
-    
+        self.assertRaises(TypeError, yaml_tools.successive_merge, [
+            self.mock_list_1, self.mock_dict_2])
+
     def test_merge_dict_to_None(self):
         out = yaml_tools.successive_merge([self.mock_None, self.mock_dict_2])
-        expected_out = ruamel.yaml.round_trip_load(self.mock_dict_2)
+        expected_out = round_trip_load(self.mock_dict_2)
         self.assertEqual(out, expected_out)
 
-    ##  from list to any
+    # from list to any
 
     def test_merge_list_to_scalar(self):
-        out = yaml_tools.successive_merge([self.mock_scalar_1, self.mock_list_2])
+        out = yaml_tools.successive_merge(
+            [self.mock_scalar_1, self.mock_list_2])
         expected_out_str = """
         test:
         - item3
         - 1
         """  # the scalar is appended at the end of the list
-        expected_out = ruamel.yaml.round_trip_load(expected_out_str)
+        expected_out = round_trip_load(expected_out_str)
         self.assertEqual(out, expected_out)
 
     def test_merge_list_to_dict(self):
-        self.assertRaises(TypeError, yaml_tools.successive_merge, [self.mock_dict_1, self.mock_list_2])
+        self.assertRaises(TypeError, yaml_tools.successive_merge, [
+            self.mock_dict_1, self.mock_list_2])
 
     def test_merge_list_to_list(self):
         out = yaml_tools.successive_merge([self.mock_list_1, self.mock_list_2])
@@ -212,28 +318,32 @@ class TestMergeByType(unittest.TestCase):
         - item2
         - item3
         """
-        expected_out = ruamel.yaml.round_trip_load(expected_out_str)
+        expected_out = round_trip_load(expected_out_str)
         self.assertEqual(out, expected_out)
 
     def test_merge_list_to_None(self):
         out = yaml_tools.successive_merge(['test: ', self.mock_list_2])
-        expected_out = ruamel.yaml.round_trip_load(self.mock_list_2)
+        expected_out = round_trip_load(self.mock_list_2)
         self.assertEqual(out, expected_out)
 
-    ##  from None to any
+    # from None to any
     def test_merge_None_to_any(self):
         out = yaml_tools.successive_merge([self.mock_None, self.mock_None])
-        expected_out = ruamel.yaml.round_trip_load(self.mock_None)
-        self.assertEqual(out, expected_out, 'Merge None to None should succeed')
+        expected_out = round_trip_load(self.mock_None)
+        self.assertEqual(out, expected_out,
+                         'Merge None to None should succeed')
         out = yaml_tools.successive_merge([self.mock_scalar_1, self.mock_None])
-        expected_out = ruamel.yaml.round_trip_load(self.mock_scalar_1)
-        self.assertEqual(out, expected_out, 'Merge None to scalar should succeed')
+        expected_out = round_trip_load(self.mock_scalar_1)
+        self.assertEqual(out, expected_out,
+                         'Merge None to scalar should succeed')
         out = yaml_tools.successive_merge([self.mock_dict_1, self.mock_None])
-        expected_out = ruamel.yaml.round_trip_load(self.mock_dict_1)
-        self.assertEqual(out, expected_out, 'Merge None to dict should succeed')
+        expected_out = round_trip_load(self.mock_dict_1)
+        self.assertEqual(out, expected_out,
+                         'Merge None to dict should succeed')
         out = yaml_tools.successive_merge([self.mock_list_1, self.mock_None])
-        expected_out = ruamel.yaml.round_trip_load(self.mock_list_1)
-        self.assertEqual(out, expected_out, 'Merge None to list should succeed')
+        expected_out = round_trip_load(self.mock_list_1)
+        self.assertEqual(out, expected_out,
+                         'Merge None to list should succeed')
 
 
 if __name__ == '__main__':  # pragma: no cover

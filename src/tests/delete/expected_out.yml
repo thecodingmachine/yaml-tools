@@ -2,8 +2,12 @@
 test:
   foo:
     h:
-    - check: ok
+      # comment2
+    - check: ok   # comment3
       ef: fefe
-    - ef: fefsegsegs
+      # comment4
+    - ef: fefsegsegs   # comment5
+    - {}
+    # comment6
     i: random
   bar: 1
