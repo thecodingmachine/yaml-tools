@@ -49,31 +49,29 @@ def merge(dest, src, current_path=""):
             copy_ca_comment_and_ca_end(dest, src)
         elif dest is None:
             return src
-        else:
+        else:  # scalar or CommentedSeq
             raise get_type_error(dest, src, current_path)
     elif isinstance(src, CommentedSeq):
         if isinstance(dest, CommentedSeq):
             for i in src:
                 dest.append(i)
             copy_ca_comment_and_ca_end(dest, src)
-        elif isinstance(dest, (str, int, float, bool)):
-            src.append(dest)
-            return src
+        elif isinstance(dest, CommentedMap):
+            raise get_type_error(dest, src, current_path)
         elif dest is None:
             return src
-        else:
-            raise get_type_error(dest, src, current_path)
-    elif isinstance(src, (str, int, float, bool)):
-        if isinstance(dest, CommentedSeq):
-            dest.append(src)
-        elif isinstance(dest, (str, int, float, bool)):
-            dest = src
-        else:
-            raise get_type_error(dest, src, current_path)
+        else:  # scalar
+            src.append(dest)
+            return src
     elif src is None:
         return dest
-    else:
-        raise get_type_error(dest, src, current_path)
+    else:  # scalar
+        if isinstance(dest, CommentedSeq):
+            dest.append(src)
+        elif isinstance(dest, CommentedMap):
+            raise get_type_error(dest, src, current_path)
+        else:  # scalar
+            dest = src
     return dest
 
 

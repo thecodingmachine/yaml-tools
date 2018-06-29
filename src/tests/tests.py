@@ -26,7 +26,7 @@ class TestCommands(unittest.TestCase):
         test:
           #ninja-comment2
           foo: 2 #comment1
-          bar: 3 #comment3
+          bar: "3" #comment3
           foobar: 3 #comment3
           #ninja-comment3
         """
@@ -78,13 +78,13 @@ class TestCommands(unittest.TestCase):
         """
         str3 = """
         test:
-          bar: 3 #comment3
+          bar: "3" #comment3
           foobar: 3 #comment3
           #ninja-comment3
         """
 
         out = yaml_tools.successive_merge([str1, str2, str3])
-        expected_out = round_trip_load(self.merge_str_out)
+        expected_out = round_trip_load(self.merge_str_out, preserve_quotes=True)
 
         yml = MyYAML()
         out_str = yml.dump(out)
@@ -243,7 +243,7 @@ class TestMergeByType(unittest.TestCase):
     def test_merge_scalar_to_scalar(self):
         out = yaml_tools.successive_merge(
             [self.mock_scalar_1, self.mock_scalar_2])
-        expected_out = round_trip_load(self.mock_scalar_2)
+        expected_out = round_trip_load(self.mock_scalar_2, preserve_quotes=True)
         self.assertEqual(out, expected_out)
 
     def test_merge_scalar_to_dict(self):
@@ -259,12 +259,12 @@ class TestMergeByType(unittest.TestCase):
           - item2
           - 2
         """
-        expected_out = round_trip_load(expected_out_str)
+        expected_out = round_trip_load(expected_out_str, preserve_quotes=True)
         self.assertEqual(out, expected_out)
 
     def test_merge_scalar_to_None(self):
         out = yaml_tools.successive_merge([self.mock_None, self.mock_scalar_2])
-        expected_out = round_trip_load(self.mock_scalar_2)
+        expected_out = round_trip_load(self.mock_scalar_2, preserve_quotes=True)
         self.assertEqual(out, expected_out)
 
     # from dict to any
@@ -281,7 +281,7 @@ class TestMergeByType(unittest.TestCase):
           bar: 2
           foobar: babar
         """
-        expected_out = round_trip_load(expected_out_str)
+        expected_out = round_trip_load(expected_out_str, preserve_quotes=True)
         self.assertEqual(out, expected_out)
 
     def test_merge_dict_to_list(self):
@@ -290,7 +290,7 @@ class TestMergeByType(unittest.TestCase):
 
     def test_merge_dict_to_None(self):
         out = yaml_tools.successive_merge([self.mock_None, self.mock_dict_2])
-        expected_out = round_trip_load(self.mock_dict_2)
+        expected_out = round_trip_load(self.mock_dict_2, preserve_quotes=True)
         self.assertEqual(out, expected_out)
 
     # from list to any
@@ -303,7 +303,7 @@ class TestMergeByType(unittest.TestCase):
         - item3
         - 1
         """  # the scalar is appended at the end of the list
-        expected_out = round_trip_load(expected_out_str)
+        expected_out = round_trip_load(expected_out_str, preserve_quotes=True)
         self.assertEqual(out, expected_out)
 
     def test_merge_list_to_dict(self):
@@ -318,30 +318,30 @@ class TestMergeByType(unittest.TestCase):
         - item2
         - item3
         """
-        expected_out = round_trip_load(expected_out_str)
+        expected_out = round_trip_load(expected_out_str, preserve_quotes=True)
         self.assertEqual(out, expected_out)
 
     def test_merge_list_to_None(self):
         out = yaml_tools.successive_merge(['test: ', self.mock_list_2])
-        expected_out = round_trip_load(self.mock_list_2)
+        expected_out = round_trip_load(self.mock_list_2, preserve_quotes=True)
         self.assertEqual(out, expected_out)
 
     # from None to any
     def test_merge_None_to_any(self):
         out = yaml_tools.successive_merge([self.mock_None, self.mock_None])
-        expected_out = round_trip_load(self.mock_None)
+        expected_out = round_trip_load(self.mock_None, preserve_quotes=True)
         self.assertEqual(out, expected_out,
                          'Merge None to None should succeed')
         out = yaml_tools.successive_merge([self.mock_scalar_1, self.mock_None])
-        expected_out = round_trip_load(self.mock_scalar_1)
+        expected_out = round_trip_load(self.mock_scalar_1, preserve_quotes=True)
         self.assertEqual(out, expected_out,
                          'Merge None to scalar should succeed')
         out = yaml_tools.successive_merge([self.mock_dict_1, self.mock_None])
-        expected_out = round_trip_load(self.mock_dict_1)
+        expected_out = round_trip_load(self.mock_dict_1, preserve_quotes=True)
         self.assertEqual(out, expected_out,
                          'Merge None to dict should succeed')
         out = yaml_tools.successive_merge([self.mock_list_1, self.mock_None])
-        expected_out = round_trip_load(self.mock_list_1)
+        expected_out = round_trip_load(self.mock_list_1, preserve_quotes=True)
         self.assertEqual(out, expected_out,
                          'Merge None to list should succeed')
 
