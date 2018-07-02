@@ -8,7 +8,7 @@ A set of CLI tools to manipulate YAML files (merge, delete, etc...) with comment
 ## Getting Started
 
 ### Prerequisites
-- Python (with pip)
+- Python3 (with pip)
 
 ### Installing
 (For development see section at the end)
@@ -24,7 +24,7 @@ $ sudo chmod +x /usr/bin/local/yaml-tools
 $ yaml-tools <command> [<args>] 
 ```
 
-There are 3 commands at the moments :
+There are 3 commands at the moment :
 
 ### merge
 Merges two or more yaml files and preserves the comments.
