@@ -1,0 +1,37 @@
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+    - db_data:/var/lib/mysql
+    - test:test
+    - toto:toto
+    restart: always
+    environment:
+    # test 1
+    - 'MYSQL_ROOT_PASSWORD=somewordpress'
+    # test 2
+    - "MYSQL_DATABASE=wordpress"
+    # test 3
+    - MYSQL_USER=wordpress
+    # test 4
+    - MYSQL_PASSWORD=wordpress
+    # test 5
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    # pp
+    ports:
+    # test 1
+    - "foo:bar"
+    # test 2
+    - 80:8080
+    # test 3
+    - '4354:486486486468'
+    restart: always
+    environment:
+    - WORDPRESS_DB_HOST=db:3306
+    - WORDPRESS_DB_USER=wordpress
+    - WORDPRESS_DB_PASSWORD=wordpress
+volumes:
+  db_data:

@@ -6,14 +6,14 @@ from copy import deepcopy
 
 from ruamel.yaml import round_trip_dump, round_trip_load
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
-from ruamel.yaml.error import StreamMark
+from ruamel.yaml.error import StreamMark, CommentMark
+from ruamel.yaml.scalarstring import ScalarString
 from ruamel.yaml.tokens import CommentToken
 
 
 ##
-# MERGE
-#
-
+# utils
+##
 
 def get_type_error(dest, src, current_path):
     return TypeError('Error trying to merge a {0} in a {1} at ({2})'.format(type(src), type(dest), current_path))
@@ -32,6 +32,22 @@ def copy_ca_comment_and_ca_end(dest, src):
         if len(src.ca.end) > 0:
             dest.ca.end = src.ca.end
 
+
+def str_or_int_map(s):
+    return int(s) if is_int(s) else s
+
+
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
+##
+# MERGE
+#
 
 def merge(dest, src, current_path=""):
     """
@@ -92,19 +108,6 @@ def successive_merge(contents):
 ##
 # DELETE and COMMENT
 ##
-
-
-def str_or_int_map(s):
-    return int(s) if is_int(s) else s
-
-
-def is_int(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-
 
 def delete_yaml_item(data, path_to_key, data_contains_list=True):
     """
@@ -195,7 +198,7 @@ def comment_yaml_item(data, path_to_key, data_contains_list=True):
             parent.pop(item_key)  # CommentedSet.pop(idx) automatically shifts all ca.items' indexes !
 
             if len(parent) == 1 or next_key == len(parent):
-                comment_list = parent.ca.end # TODO: fix this, the appended comments don't show up in some case
+                comment_list = parent.ca.end  # TODO: fix this, the appended comments don't show up in some case
             else:
                 comment_list = parent.ca.items.get(next_key, [None, None, None, None])[1]
                 if comment_list is None:
@@ -227,10 +230,93 @@ def comment_yaml_item(data, path_to_key, data_contains_list=True):
     return data
 
 
+##
+# NORMALIZE-DOCKER-COMPOSE
+##
+
+def is_str_dict(s):
+    return isinstance(s, (str, ScalarString)) and ('=' in s or ':' in s)
+
+
+def only_contains_str_dict(data):
+    if isinstance(data, CommentedMap):
+        for k in data:
+            if not is_str_dict(data[k]):
+                return False
+    elif isinstance(data, CommentedSeq):
+        for v in data:
+            print(v)
+            if not is_str_dict(v):
+                return False
+    else:
+        return False
+
+    return True
+
+
+def convert_str_to_key_value(string, separators=(':', '=')):
+    """
+    :param string: in 'foo:bar' or 'foo=bar' format
+    :param separators:
+    :return: (key, value)|(None, None)
+    """
+    sep = ''
+    for s in separators:
+        if s in string:
+            sep = s
+    if sep != '':
+        array = [a.strip(' ') for a in string.split(sep)]
+        return array[0], array[1]
+    return None, None
+
+
+def convert_commented_seq_to_dict(seq):
+    """
+    :param seq: CommentedSeq
+    :return: CommentedMap|CommentedSeq
+    """
+    if len(seq) > 0 and only_contains_str_dict(seq):
+        seq_copy = deepcopy(seq)
+        data = CommentedMap()
+        copy_ca_comment_and_ca_end(data, seq_copy)
+        for i in range(len(seq_copy)):
+            k, v = convert_str_to_key_value(seq_copy[i])
+            data[k] = v
+            data.ca.items[k] = seq_copy.ca.items.get(i, [None, None, None, None])
+        return data
+    return seq
+
+
+def normalize_docker_compose(content, version='3.4'):
+    """
+    Comment the content if it's not a CommentedMap, add version if not found,  convert all key-value string
+    (e.g. 'foo=bar' or '80:8080') to key-value dicts inside the services' `ports` and `environment` fields.
+    """
+    data = round_trip_load(content, preserve_quotes=True)
+    if isinstance(data, CommentedMap):
+        keys = [key.lower() for key in data.keys()]
+        if 'version' not in keys:
+            data['version'] = version
+        if 'services' in keys:
+            services = data['services']
+            for k in services:
+                if 'ports' in services[k] and isinstance(services[k]['ports'], CommentedSeq):
+                    services[k]['ports'] = convert_commented_seq_to_dict(services[k]['ports'])
+                if 'environment' in services[k] and isinstance(services[k]['environment'], CommentedSeq):
+                    services[k]['environment'] = convert_commented_seq_to_dict(services[k]['environment'])
+    else:
+        start_mark = CommentMark(0)
+        comments = [CommentToken('# ' + line, start_mark, None) for line in content.splitlines()]
+        data = CommentedMap()
+        data.ca.comment = [None, comments]
+        data['version'] = version
+
+    return data
+
+
 ###
 # main and commands
 ###
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -251,6 +337,8 @@ At the moment there are three commands available:
         delete_command()
     elif args.command == 'comment':
         comment_command()
+    elif args.command == 'normalize-docker-compose':
+        normalize_docker_compose_command()
     else:
         print('Unrecognized command')
         parser.print_help()
@@ -268,8 +356,6 @@ def merge_command():
                         required=True)
     parser.add_argument('-o', '--output', type=str,
                         help='Path to the output file, or stdout by default')
-    parser.add_argument('--indent', type=int,
-                        help='Number of space(s) for each indent', default=2)
 
     args = parser.parse_args(sys.argv[2:])
 
@@ -297,8 +383,6 @@ def delete_command():
                         help='<Required> Path to the input yaml files', required=True)
     parser.add_argument('-o', '--output', type=str,
                         help='Path to the output file, or stdout by default')
-    parser.add_argument('--indent', type=int,
-                        help='Number of space(s) for each indent', default=2)
 
     args = parser.parse_args(sys.argv[2:])
     input_file = open(args.input, 'r')
@@ -325,8 +409,6 @@ def comment_command():  # pragma: no cover
                         help='<Required> Path to the input yaml file', required=True)
     parser.add_argument('-o', '--output', type=str,
                         help='Path to the output file, or stdout by default')
-    parser.add_argument('--indent', type=int,
-                        help='Number of space(s) for each indent', default=2)
 
     args = parser.parse_args(sys.argv[2:])
     input_file = open(args.input, 'r')
@@ -334,6 +416,31 @@ def comment_command():  # pragma: no cover
     input_file.close()
 
     output_data = comment_yaml_item(data, args.path_to_key, True)
+
+    output_file = open(args.output, 'w') if args.output else sys.stdout
+    round_trip_dump(output_data, output_file)
+    output_file.close()
+
+
+def normalize_docker_compose_command():  # pragma: no cover
+    """
+    Sub-command, see main()
+    """
+    parser = argparse.ArgumentParser(
+        description='Normalize the input docker-compose file, then write it in the output')
+    parser.add_argument('-i', '--input', type=str,
+                        help='<Required> Path to the input yaml file', required=True)
+    parser.add_argument('-o', '--output', type=str,
+                        help='Path to the output file, or stdout by default')
+    parser.add_argument('--dc-version', type=str,
+                        help='Version of docker-compose', default='3.4')
+
+    args = parser.parse_args(sys.argv[2:])
+    input_file = open(args.input, 'r')
+    content = input_file.read()
+    input_file.close()
+
+    output_data = normalize_docker_compose(content, args.dc_version)
 
     output_file = open(args.output, 'w') if args.output else sys.stdout
     round_trip_dump(output_data, output_file)
