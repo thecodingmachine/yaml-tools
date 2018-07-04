@@ -422,7 +422,7 @@ def comment_command():  # pragma: no cover
     output_file.close()
 
 
-def normalize_docker_compose_command():  # pragma: no cover
+def normalize_docker_compose_command():
     """
     Sub-command, see main()
     """
