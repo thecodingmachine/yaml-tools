@@ -44,15 +44,14 @@ $ yaml-tools delete PATH_TO_KEY -i INPUT [-o OUTPUT]
 - **OUTPUT**: path to output yaml file (or sys.stdout by default).
 
 ### normalize-docker-compose
-Normalize the input docker-compose file by adding the version (3.4 by default) and converting all key-value string
-(e.g. 'foo=bar' or '80:8080') to key-value dicts inside the services' `ports` and `environment` fields,
+Normalize the input docker-compose file by and converting all key-value string (e.g. 'foo=bar' or '80:8080') 
+to key-value dicts inside the services' `ports`, `labels` and `environment` fields,
 and finally delete all duplicated volumes (**and its preceding comments**) for each services
 ```
-$ yaml-tools normalize-docker-compose -i INPUT [-o OUTPUT] [--dc-version DC_VERSION]
+$ yaml-tools normalize-docker-compose -i INPUT [-o OUTPUT]
 ```
 - **INPUT**: path to input yaml file.
 - **OUTPUT**: path to output yaml file (or sys.stdout by default).
-- **DC_VERSION**: version of docker-compose to append if any found, `3.2` by default
 
 ### comment (/!\ EXPERIMENTAL)
 Comments one item/block from the input yaml file and preserves the comments.

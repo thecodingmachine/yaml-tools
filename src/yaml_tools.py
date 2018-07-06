@@ -312,34 +312,25 @@ def delete_duplicated_volumes(data):
     return data
 
 
-def normalize_docker_compose(content, version='3.4'):
+def normalize_docker_compose(content):
     """
-    Comment the content if it's not a CommentedMap, add version if not found, convert all key-value string
-    (e.g. 'foo=bar' or '80:8080') to key-value dicts inside the services' `ports` and `environment` fields,
+    If content is a CommentedMap, convert all key-value string (e.g. 'foo=bar' or '80:8080')
+    to key-value dicts inside the services' `ports`, `labels` and `environment` fields,
     and finally delete all duplicated volumes (and its preceding comments) for each services
     """
     data = round_trip_load(content, preserve_quotes=True)
     if isinstance(data, CommentedMap):
         keys = [key.lower() for key in data.keys()]
-        if 'version' not in keys:
-            data['version'] = version
         if 'services' in keys:
             services = data['services']
             for k in services:
                 if 'ports' in services[k] and isinstance(services[k]['ports'], CommentedSeq):
                     services[k]['ports'] = convert_commented_seq_to_dict(services[k]['ports'])
-                if 'environment' in services[k] and isinstance(services[k]['environment'], CommentedSeq):
-                    services[k]['environment'] = convert_commented_seq_to_dict(services[k]['environment'])
                 if 'labels' in services[k] and isinstance(services[k]['labels'], CommentedSeq):
                     services[k]['labels'] = convert_commented_seq_to_dict(services[k]['labels'])
+                if 'environment' in services[k] and isinstance(services[k]['environment'], CommentedSeq):
+                    services[k]['environment'] = convert_commented_seq_to_dict(services[k]['environment'])
             delete_duplicated_volumes(data)
-    else:
-        start_mark = CommentMark(0)
-        comments = [CommentToken('# ' + line, start_mark, None) for line in content.splitlines()]
-        data = CommentedMap()
-        data.ca.comment = [None, comments]
-        data['version'] = version
-
     return data
 
 
@@ -461,15 +452,13 @@ def normalize_docker_compose_command():
                         help='<Required> Path to the input yaml file', required=True)
     parser.add_argument('-o', '--output', type=str,
                         help='Path to the output file, or stdout by default')
-    parser.add_argument('--dc-version', type=str,
-                        help='Version of docker-compose', default='3.4')
 
     args = parser.parse_args(sys.argv[2:])
     input_file = open(args.input, 'r')
     content = input_file.read()
     input_file.close()
 
-    output_data = normalize_docker_compose(content, args.dc_version)
+    output_data = normalize_docker_compose(content)
 
     output_file = open(args.output, 'w') if args.output else sys.stdout
     round_trip_dump(output_data, output_file)

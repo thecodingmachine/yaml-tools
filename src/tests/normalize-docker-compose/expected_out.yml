@@ -43,4 +43,3 @@ services:
       read_only: false
 volumes:
   db_data:
-version: '3.4'
