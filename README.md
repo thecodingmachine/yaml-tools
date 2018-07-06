@@ -10,8 +10,8 @@ A set of CLI tools to manipulate YAML files (merge, delete, etc...) with comment
 ### Prerequisites
 - Python3 (with pip)
 
-### Installing
-(For development see section at the end)
+### Installation
+*(For development see section at the end)*
 ```
 $ pip install ruamel.yaml
 $ export YAML_TOOLS_VERSION=0.0.5
@@ -24,9 +24,9 @@ $ sudo chmod +x /usr/bin/local/yaml-tools
 $ yaml-tools <command> [<args>] 
 ```
 
-There are 3 commands at the moment :
+There are 4 commands at the moment :
 
-### merge
+### 1) merge
 Merges two or more yaml files and preserves the comments.
 ```
 $ yaml-tools merge -i INPUTS [INPUTS ...] [-o OUTPUT]
@@ -34,7 +34,7 @@ $ yaml-tools merge -i INPUTS [INPUTS ...] [-o OUTPUT]
 - **INPUTS**: paths to input yaml files, which will be merged from the last to the first.
 - **OUTPUT**: path to output yaml file (or sys.stdout by default).
 
-### delete
+### 2) delete
 Deletes one item/block (**and its preceding comments**) from the input yaml file.
 ```
 $ yaml-tools delete PATH_TO_KEY -i INPUT [-o OUTPUT]
@@ -43,7 +43,7 @@ $ yaml-tools delete PATH_TO_KEY -i INPUT [-o OUTPUT]
 - **INPUT**: path to input yaml file.
 - **OUTPUT**: path to output yaml file (or sys.stdout by default).
 
-### normalize-docker-compose
+### 3) normalize-docker-compose
 Normalize the input docker-compose file by and converting all key-value string (e.g. 'foo=bar' or '80:8080') 
 to key-value dicts inside the services' `ports`, `labels` and `environment` fields,
 and finally delete all duplicated volumes (**and its preceding comments**) for each services
@@ -53,7 +53,7 @@ $ yaml-tools normalize-docker-compose -i INPUT [-o OUTPUT]
 - **INPUT**: path to input yaml file.
 - **OUTPUT**: path to output yaml file (or sys.stdout by default).
 
-### comment (/!\ EXPERIMENTAL)
+### 4) comment (/!\ EXPERIMENTAL)
 Comments one item/block from the input yaml file and preserves the comments.
 
 /!\ There are somme issues with comments which are at the end of any intermediate level/block, 
@@ -65,7 +65,7 @@ $ yaml-tools comment PATH_TO_KEY -i INPUT [-o OUTPUT]
 - **INPUT**: path to input yaml file.
 - **OUTPUT**: path to output yaml file (or sys.stdout by default).
 
-## Development
+## Dev
 
 ### Installing
 - Open a terminal console on this project's root folder
