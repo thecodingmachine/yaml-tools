@@ -3,6 +3,7 @@ services:
     image: mysql:5.7
     volumes:
     - db_data:/var/lib/mysql
+    # this comment will be conserved
     - test:test
     - toto:toto
     restart: always
@@ -33,6 +34,13 @@ services:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
+  traefik:
+    volumes:
+    # this comment will be conserved
+    - type: bind
+      source: /var/run/docker.sock
+      target: /var/run/docker.sock
+      read_only: false
 volumes:
   db_data:
 version: '3.4'

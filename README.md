@@ -14,7 +14,7 @@ A set of CLI tools to manipulate YAML files (merge, delete, etc...) with comment
 (For development see section at the end)
 ```
 $ pip install ruamel.yaml
-$ export YAML_TOOLS_VERSION=0.0.4
+$ export YAML_TOOLS_VERSION=0.0.5
 $ sudo wget https://raw.githubusercontent.com/thecodingmachine/yaml-tools/${YAML_TOOLS_VERSION}/src/yaml_tools.py -O /usr/local/bin/yaml-tools
 $ sudo chmod +x /usr/bin/local/yaml-tools
 ```
@@ -45,7 +45,8 @@ $ yaml-tools delete PATH_TO_KEY -i INPUT [-o OUTPUT]
 
 ### normalize-docker-compose
 Normalize the input docker-compose file by adding the version (3.4 by default) and converting all key-value string
-(e.g. 'foo=bar' or '80:8080') to key-value dicts inside the services' `ports` and `environment` fields.
+(e.g. 'foo=bar' or '80:8080') to key-value dicts inside the services' `ports` and `environment` fields,
+and finally delete all duplicated volumes (**and its preceding comments**) for each services
 ```
 $ yaml-tools normalize-docker-compose -i INPUT [-o OUTPUT] [--dc-version DC_VERSION]
 ```
