@@ -14,7 +14,7 @@ A set of CLI tools to manipulate YAML files (merge, delete, etc...) with comment
 (For development see section at the end)
 ```
 $ pip install ruamel.yaml
-$ export YAML_TOOLS_VERSION=0.0.4
+$ export YAML_TOOLS_VERSION=0.0.5
 $ sudo wget https://raw.githubusercontent.com/thecodingmachine/yaml-tools/${YAML_TOOLS_VERSION}/src/yaml_tools.py -O /usr/local/bin/yaml-tools
 $ sudo chmod +x /usr/bin/local/yaml-tools
 ```
@@ -31,29 +31,40 @@ Merges two or more yaml files and preserves the comments.
 ```
 $ yaml-tools merge -i INPUTS [INPUTS ...] [-o OUTPUT]
 ```
-- INPUTS: paths to input yaml files, which will be merged from the last to the first.
-- OUTPUT: path to output yaml file (or sys.stdout by default).
+- **INPUTS**: paths to input yaml files, which will be merged from the last to the first.
+- **OUTPUT**: path to output yaml file (or sys.stdout by default).
 
 ### delete
-Deletes one item/block (and its preceding comments) from the input yaml file.
+Deletes one item/block (**and its preceding comments**) from the input yaml file.
 ```
 $ yaml-tools delete PATH_TO_KEY -i INPUT [-o OUTPUT]
 ```
-- PATH_TO_KEY: "path" to access the yaml item/block which will be deleted, e.g. `key1 0 key2`
-- INPUT: path to input yaml file.
-- OUTPUT: path to output yaml file (or sys.stdout by default).
+- **PATH_TO_KEY**: "path" to access the yaml item/block which will be deleted, e.g. `key1 0 key2`
+- **INPUT**: path to input yaml file.
+- **OUTPUT**: path to output yaml file (or sys.stdout by default).
+
+### normalize-docker-compose
+Normalize the input docker-compose file by adding the version (3.4 by default) and converting all key-value string
+(e.g. 'foo=bar' or '80:8080') to key-value dicts inside the services' `ports` and `environment` fields,
+and finally delete all duplicated volumes (**and its preceding comments**) for each services
+```
+$ yaml-tools normalize-docker-compose -i INPUT [-o OUTPUT] [--dc-version DC_VERSION]
+```
+- **INPUT**: path to input yaml file.
+- **OUTPUT**: path to output yaml file (or sys.stdout by default).
+- **DC_VERSION**: version of docker-compose to append if any found, `3.2` by default
 
 ### comment (/!\ EXPERIMENTAL)
 Comments one item/block from the input yaml file and preserves the comments.
 
-There are somme issues with comments which are at the end of any intermediate level/block, 
+/!\ There are somme issues with comments which are at the end of any intermediate level/block, 
 and also commenting the last item from a list, so use it with caution.
 ```
 $ yaml-tools comment PATH_TO_KEY -i INPUT [-o OUTPUT]
 ```
-- PATH_TO_KEY: "path" to access the yaml item which will be commented, e.g. `key1 0 key2`
-- INPUT: path to input yaml file.
-- OUTPUT: path to output yaml file (or sys.stdout by default).
+- **PATH_TO_KEY**: "path" to access the yaml item which will be commented, e.g. `key1 0 key2`
+- **INPUT**: path to input yaml file.
+- **OUTPUT**: path to output yaml file (or sys.stdout by default).
 
 ## Development
 

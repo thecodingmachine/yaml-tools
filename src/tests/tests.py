@@ -1,8 +1,7 @@
 import sys
 import unittest
 
-from ruamel.yaml import YAML
-from ruamel.yaml import round_trip_load
+from ruamel.yaml import YAML, round_trip_load
 from ruamel.yaml.compat import StringIO
 
 sys.path.append('..')
@@ -20,7 +19,7 @@ class MyYAML(YAML):
             return stream.getvalue()
 
 
-class TestCommands(unittest.TestCase):
+class TestMergeAndDeleteCommands(unittest.TestCase):
     merge_str_out = """
         #comment1
         test:
@@ -143,7 +142,7 @@ test:
     sub-bar: 2
   baz:
     sub-baz: 3
-            """
+        """
         expected_str = """
 #comment1
 test:
@@ -154,7 +153,7 @@ test:
   #  sub-bar: 2
   baz:
     sub-baz: 3
-            """
+        """
 
         data = round_trip_load(str, preserve_quotes=True)
         path_to_key = ['test', 'bar']
@@ -177,7 +176,7 @@ test:
   sub-bar: 2
 - baz:
   sub-baz: 3
-            """
+        """
         expected_str = """
 #comment1
 test:
@@ -188,7 +187,7 @@ test:
 #  sub-bar: 2
 - baz:
   sub-baz: 3
-            """
+        """
 
         data = round_trip_load(str, preserve_quotes=True)
         path_to_key = ['test', '1']
@@ -208,11 +207,61 @@ test:
   bar:
   - sub-bar: 1
   - sub-bar: 2
-            """
+        """
         data = round_trip_load(str, preserve_quotes=True)
         self.assertRaises(KeyError, yaml_tools.comment_yaml_item, data, ['unknown-key'])
         self.assertRaises(RuntimeError, yaml_tools.comment_yaml_item, data, ['test', 'bar', '1000'])
         self.assertRaises(RuntimeError, yaml_tools.comment_yaml_item, data, ['test', 'bar', 'NotAnInteger'])
+
+
+class TestNormalizeDockerComposeCommand(unittest.TestCase):
+    def test_normalize_random_file(self):
+        str = """#comment1
+"definitely-not-a-docker-compose-file-lol"
+#comment2"""
+        expected_str = """# #comment1
+# "definitely-not-a-docker-compose-file-lol"
+# #comment2
+version: '3.4'
+"""
+        out = yaml_tools.normalize_docker_compose(str, version='3.4')
+        expected_out = round_trip_load(expected_str, preserve_quotes=True)
+
+        yml = MyYAML()
+        out_str = yml.dump(out)
+        expected_out_str = yml.dump(expected_out)
+        self.assertEqual(out_str, expected_out_str)
+
+    def test_normalize_docker_compose_file(self):
+        file = './normalize-docker-compose/file.yml'
+        fo = './normalize-docker-compose/out.yml'
+        feo = './normalize-docker-compose/expected_out.yml'
+
+        sys.argv = ['yaml-tools', 'normalize-docker-compose', '-i', file, '-o', fo]
+        yaml_tools.main()
+
+        out_file = open(fo, 'r')
+        expected_out_file = open(feo, 'r')
+        self.assertEqual(out_file.read(), expected_out_file.read())
+        out_file.close()
+        expected_out_file.close()
+
+    def test_only_contains_str_dict(self):
+        data = round_trip_load("test: 'foo=bar'", preserve_quotes=True)
+        result = yaml_tools.only_contains_str_dict(data)
+        self.assertEqual(result, True)
+
+        data = round_trip_load("- 'foo=bar'\n- 'baz=qux'\n", preserve_quotes=True)
+        result = yaml_tools.only_contains_str_dict(data)
+        self.assertEqual(result, True)
+
+        data = round_trip_load("'foo': 'bar'", preserve_quotes=True)
+        result = yaml_tools.only_contains_str_dict(data)
+        self.assertEqual(result, False)
+
+        data = round_trip_load("[foo]", preserve_quotes=True)
+        result = yaml_tools.only_contains_str_dict(data)
+        self.assertEqual(result, False)
 
 
 class TestMergeByType(unittest.TestCase):
