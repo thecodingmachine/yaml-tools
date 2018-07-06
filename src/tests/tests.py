@@ -215,23 +215,6 @@ test:
 
 
 class TestNormalizeDockerComposeCommand(unittest.TestCase):
-    def test_normalize_random_file(self):
-        str = """#comment1
-"definitely-not-a-docker-compose-file-lol"
-#comment2"""
-        expected_str = """# #comment1
-# "definitely-not-a-docker-compose-file-lol"
-# #comment2
-version: '3.4'
-"""
-        out = yaml_tools.normalize_docker_compose(str, version='3.4')
-        expected_out = round_trip_load(expected_str, preserve_quotes=True)
-
-        yml = MyYAML()
-        out_str = yml.dump(out)
-        expected_out_str = yml.dump(expected_out)
-        self.assertEqual(out_str, expected_out_str)
-
     def test_normalize_docker_compose_file(self):
         file = './normalize-docker-compose/file.yml'
         fo = './normalize-docker-compose/out.yml'
