@@ -324,8 +324,6 @@ def normalize_docker_compose(content):
         if 'services' in keys:
             services = data['services']
             for k in services:
-                if 'ports' in services[k] and isinstance(services[k]['ports'], CommentedSeq):
-                    services[k]['ports'] = convert_commented_seq_to_dict(services[k]['ports'])
                 if 'labels' in services[k] and isinstance(services[k]['labels'], CommentedSeq):
                     services[k]['labels'] = convert_commented_seq_to_dict(services[k]['labels'])
                 if 'environment' in services[k] and isinstance(services[k]['environment'], CommentedSeq):
