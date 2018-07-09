@@ -315,7 +315,7 @@ def delete_duplicated_volumes(data):
 def normalize_docker_compose(content):
     """
     If content is a CommentedMap, convert all key-value string (e.g. 'foo=bar' or '80:8080')
-    to key-value dicts inside the services' `ports`, `labels` and `environment` fields,
+    to key-value dicts inside the services' `labels` and `environment` fields,
     and finally delete all duplicated volumes (and its preceding comments) for each services
     """
     data = round_trip_load(content, preserve_quotes=True)
