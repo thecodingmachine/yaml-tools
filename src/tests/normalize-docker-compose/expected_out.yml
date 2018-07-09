@@ -23,12 +23,7 @@ services:
     image: wordpress:latest
     # pp
     ports:
-    # test 1
-      foo: bar
-    # test 2
-      '80': '8080'
-    # test 3
-      '4354': '486486486468'
+    - 80:8080
     restart: always
     environment:
       WORDPRESS_DB_HOST: db:3306
