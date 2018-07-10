@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import sys
@@ -6,7 +6,7 @@ from copy import deepcopy
 
 from ruamel.yaml import round_trip_dump, round_trip_load
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
-from ruamel.yaml.error import StreamMark, CommentMark
+from ruamel.yaml.error import StreamMark
 from ruamel.yaml.scalarstring import ScalarString
 from ruamel.yaml.tokens import CommentToken
 
