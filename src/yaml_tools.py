@@ -286,37 +286,35 @@ def convert_commented_seq_to_dict(seq):
     return seq
 
 
-def delete_duplicated_volumes(data):
+def delete_duplicated_items(service, key):
     """
-    Delete all duplicated volumes (and its preceding comments) for each services
-    :param data: docker-compose yaml content
-    :return: data
+    Given a (docker-compose) service, delete all duplicated items (and its preceding comments)
+    from an array given by the key (e.g. volumes or env_file)
+    :param service: docker-compose yaml service
+    :param key: key to an array
+    :return: service
     """
-    if 'services' in data:
-        services = data['services']
-        for k in services:
-            if 'volumes' in services[k]:
-                service = services[k]
-                volumes = service['volumes']
-                del_indexes = set()
-                i1 = -1
-                for v1 in volumes:
-                    i1 = i1 + 1
-                    i2 = -1
-                    for v2 in volumes:
-                        i2 = i2 + 1
-                        if i1 != i2 and i1 not in del_indexes and str(v1) == str(v2):
-                            del_indexes.add(i2)
-                for i in reversed(list(del_indexes)):
-                    volumes.pop(i)
-    return data
+    if key in service and isinstance(service[key], CommentedSeq):
+        array = service[key]
+        del_indexes = set()
+        i1 = -1
+        for item1 in array:
+            i1 = i1 + 1
+            i2 = -1
+            for item2 in array:
+                i2 = i2 + 1
+                if i1 != i2 and i1 not in del_indexes and str(item1) == str(item2):
+                    del_indexes.add(i2)
+        for i in reversed(list(del_indexes)):
+            array.pop(i)
+    return service
 
 
 def normalize_docker_compose(content):
     """
     If content is a CommentedMap, convert all key-value string (e.g. 'foo=bar' or '80:8080')
     to key-value dicts inside the services' `labels` and `environment` fields,
-    and finally delete all duplicated volumes (and its preceding comments) for each services
+    also delete all duplicated volumes and env_file (and its preceding comments) for each services
     """
     data = round_trip_load(content, preserve_quotes=True)
     if isinstance(data, CommentedMap):
@@ -328,7 +326,8 @@ def normalize_docker_compose(content):
                     services[k]['labels'] = convert_commented_seq_to_dict(services[k]['labels'])
                 if 'environment' in services[k] and isinstance(services[k]['environment'], CommentedSeq):
                     services[k]['environment'] = convert_commented_seq_to_dict(services[k]['environment'])
-            delete_duplicated_volumes(data)
+                delete_duplicated_items(services[k], 'volumes')
+                delete_duplicated_items(services[k], 'env_file')
     return data
 
 

@@ -9,6 +9,10 @@ services:
     - test:test
     - toto:toto
     restart: always
+    env_file:
+    - '.env1'
+    - '.env1337'
+    - '.env1'
     environment:
     # test 1
     - 'MYSQL_ROOT_PASSWORD=somewordpress'
@@ -31,6 +35,11 @@ services:
     - WORDPRESS_DB_HOST=db:3306
     - WORDPRESS_DB_USER=wordpress
     - WORDPRESS_DB_PASSWORD=wordpress
+    labels: # This is incredible tho !
+    - 'foo=bar'
+    - 'foo:bar'
+    - 'foo=bar'
+    - 'foo:bar'
   traefik:
     volumes:
     # this comment will be conserved
