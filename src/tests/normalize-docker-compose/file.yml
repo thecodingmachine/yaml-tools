@@ -35,6 +35,11 @@ services:
     - WORDPRESS_DB_HOST=db:3306
     - WORDPRESS_DB_USER=wordpress
     - WORDPRESS_DB_PASSWORD=wordpress
+    labels: # This is incredible tho !
+    - 'foo=bar'
+    - 'foo:bar'
+    - 'foo=bar'
+    - 'foo:bar'
   traefik:
     volumes:
     # this comment will be conserved
