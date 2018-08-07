@@ -46,7 +46,7 @@ $ yaml-tools delete PATH_TO_KEY -i INPUT [-o OUTPUT]
 ### 3) normalize-docker-compose
 Normalize the input docker-compose file by and converting all key-value string (e.g. 'foo=bar' or '80:8080') 
 to key-value dicts inside the services' `labels` and `environment` fields,
-and finally delete all duplicated volumes (**and its preceding comments**) for each services
+also delete all duplicated volumes and env_file (**and its preceding comments**) for each services
 ```
 $ yaml-tools normalize-docker-compose -i INPUT [-o OUTPUT]
 ```

@@ -9,6 +9,10 @@ services:
     - test:test
     - toto:toto
     restart: always
+    env_file:
+    - '.env1'
+    - '.env1337'
+    - '.env1'
     environment:
     # test 1
     - 'MYSQL_ROOT_PASSWORD=somewordpress'
